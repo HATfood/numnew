@@ -1,0 +1,438 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>پنل ارتباطات سازمانی</title>
+    <link href="https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@v33.003/Vazirmatn-font-face.css" rel="stylesheet" type="text/css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+
+    <style>
+        :root {
+            --primary: #2563eb;
+            --primary-hover: #1d4ed8;
+            --bg-body: #f8fafc;
+            --bg-card: #ffffff;
+            --text-main: #1e293b;
+            --text-muted: #64748b;
+            --border-color: #e2e8f0;
+            --accent: #f59e0b;
+            --success: #10b981;
+            --radius-lg: 16px;
+            --radius-md: 12px;
+            --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
+        }
+
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --bg-body: #0f172a;
+                --bg-card: #1e293b;
+                --text-main: #f1f5f9;
+                --text-muted: #94a3b8;
+                --border-color: #334155;
+            }
+        }
+
+        * { box-sizing: border-box; transition: all 0.2s ease; }
+
+        body {
+            font-family: 'Vazirmatn', sans-serif;
+            background-color: var(--bg-body);
+            color: var(--text-main);
+            margin: 0;
+            padding: 0;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 2rem 1rem;
+        }
+
+        /* Header Styling */
+        .header {
+            text-align: center;
+            margin-bottom: 3rem;
+        }
+
+        .header h1 {
+            font-size: 2.2rem;
+            margin-bottom: 0.5rem;
+            background: linear-gradient(90deg, var(--primary), #8b5cf6);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            font-weight: 900;
+        }
+
+        .header p { color: var(--text-muted); font-size: 1.1rem; }
+
+        /* Search & Filter Bar */
+        .sticky-controls {
+            position: sticky;
+            top: 1rem;
+            z-index: 100;
+            background: rgba(var(--bg-card), 0.8);
+            backdrop-filter: blur(12px);
+            padding: 1.5rem;
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow);
+            border: 1px solid var(--border-color);
+            margin-bottom: 2.5rem;
+        }
+
+        .search-wrapper {
+            position: relative;
+            margin-bottom: 1.2rem;
+        }
+
+        #search-input {
+            width: 100%;
+            padding: 1rem 3rem 1rem 1rem;
+            border-radius: var(--radius-md);
+            border: 2px solid var(--border-color);
+            background: var(--bg-body);
+            color: var(--text-main);
+            font-family: inherit;
+            font-size: 1rem;
+        }
+
+        #search-input:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.1);
+        }
+
+        .search-icon { position: absolute; right: 1.2rem; top: 50%; transform: translateY(-50%); color: var(--text-muted); }
+
+        /* Filter Pills */
+        .filter-container {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .filter-btn {
+            padding: 0.5rem 1.2rem;
+            border-radius: 50px;
+            border: 1px solid var(--border-color);
+            background: var(--bg-card);
+            color: var(--text-muted);
+            cursor: pointer;
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+
+        .filter-btn.active {
+            background: var(--primary);
+            color: white;
+            border-color: var(--primary);
+        }
+
+        /* Employee Cards */
+        .dept-section { margin-bottom: 3rem; }
+        
+        .dept-title {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .dept-title h2 { font-size: 1.3rem; font-weight: 800; color: var(--text-main); }
+        .dept-line { flex-grow: 1; height: 1px; background: var(--border-color); }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .card {
+            background: var(--bg-card);
+            border-radius: var(--radius-md);
+            border: 1px solid var(--border-color);
+            padding: 1.5rem;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            hover: transform: translateY(-5px);
+        }
+
+        .card:hover {
+            box-shadow: 0 10px 20px rgba(0,0,0,0.05);
+            border-color: var(--primary);
+        }
+
+        .card-top {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .avatar {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: var(--primary);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 1.2rem;
+            flex-shrink: 0;
+        }
+
+        .user-info h3 { margin: 0; font-size: 1.1rem; }
+        .user-info p { margin: 0; color: var(--text-muted); font-size: 0.85rem; }
+
+        .contact-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0.6rem 0.8rem;
+            background: var(--bg-body);
+            border-radius: 8px;
+            font-family: sans-serif; /* Extensions/Emails look better in sans */
+        }
+
+        .contact-link {
+            text-decoration: none;
+            color: var(--text-main);
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.95rem;
+        }
+
+        .copy-trigger {
+            color: var(--text-muted);
+            cursor: pointer;
+            padding: 4px;
+        }
+
+        .copy-trigger:hover { color: var(--primary); }
+
+        .badge-manager {
+            position: absolute;
+            top: 1rem;
+            left: 1rem;
+            background: #fef3c7;
+            color: #92400e;
+            font-size: 0.7rem;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-weight: 800;
+        }
+
+        /* Empty State */
+        .empty-state {
+            text-align: center;
+            padding: 4rem;
+            color: var(--text-muted);
+        }
+
+        /* Loading Skeleton */
+        .skeleton {
+            background: var(--border-color);
+            animation: pulse 1.5s infinite ease-in-out;
+            border-radius: 4px;
+        }
+
+        @keyframes pulse {
+            0% { opacity: 0.6; }
+            50% { opacity: 0.3; }
+            100% { opacity: 0.6; }
+        }
+
+        footer {
+            text-align: center;
+            margin-top: 4rem;
+            padding: 2rem;
+            color: var(--text-muted);
+            font-size: 0.8rem;
+            border-top: 1px solid var(--border-color);
+        }
+
+        @media (max-width: 600px) {
+            .grid { grid-template-columns: 1fr; }
+            .sticky-controls { top: 0; border-radius: 0 0 16px 16px; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <header class="header">
+        <h1>دفترچه تلفن هوشمند</h1>
+        <p>شبکه ارتباطات داخلی هستی آرین تامین</p>
+    </header>
+
+    <div class="sticky-controls" id="controls" style="display:none;">
+        <div class="search-wrapper">
+            <i class="fas fa-search search-icon"></i>
+            <input type="text" id="search-input" placeholder="جستجوی نام، واحد یا شماره داخلی...">
+        </div>
+        <div class="filter-container" id="filter-pills">
+            <!-- Dynamic Pills -->
+        </div>
+    </div>
+
+    <!-- Skeleton Loading -->
+    <div id="loading-placeholder">
+        <div class="grid">
+            <div class="card" style="height: 200px; background: var(--bg-card); opacity:0.5;">
+                <div class="skeleton" style="width: 50px; height: 50px; border-radius: 50%;"></div>
+                <div class="skeleton" style="width: 70%; height: 20px;"></div>
+                <div class="skeleton" style="width: 100%; height: 40px;"></div>
+            </div>
+            <!-- Repeat Skeletons -->
+        </div>
+    </div>
+
+    <main id="main-content"></main>
+
+    <footer>
+        توسعه یافته توسط واحد IT | نسخه ۲.۰ | ۱۴۰۴
+    </footer>
+</div>
+
+<script>
+    const CONFIG = {
+        fileName: 'numbers.xlsx',
+        cols: { dept: 'واحد', name: 'نام', family: 'خانوادگی', role: 'سمت', ext: 'داخلی', email: 'ایمیل' }
+    };
+
+    let allData = [];
+    let currentFilter = 'همه';
+
+    async function init() {
+        try {
+            const resp = await fetch(CONFIG.fileName);
+            const arrayBuffer = await resp.arrayBuffer();
+            const workbook = XLSX.read(arrayBuffer, { type: 'array' });
+            const sheet = workbook.Sheets[workbook.SheetNames[0]];
+            const raw = XLSX.utils.sheet_to_json(sheet);
+
+            allData = raw.map(item => ({
+                fullName: `${item[CONFIG.cols.name] || ''} ${item[CONFIG.cols.family] || ''}`.trim(),
+                dept: item[CONFIG.cols.dept] || 'سایر',
+                role: item[CONFIG.cols.role] || 'کارمند',
+                ext: String(item[CONFIG.cols.ext] || ''),
+                email: item[CONFIG.cols.email] || '-',
+                isManager: (item[CONFIG.cols.role] || '').includes('مدیر')
+            }));
+
+            renderUI();
+            document.getElementById('loading-placeholder').style.display = 'none';
+            document.getElementById('controls').style.display = 'block';
+
+        } catch (err) {
+            document.getElementById('main-content').innerHTML = `
+                <div class="empty-state">
+                    <i class="fas fa-exclamation-circle fa-3x"></i>
+                    <p>خطا در بارگذاری فایل Excel. اطمینان حاصل کنید فایل numbers.xlsx در پوشه قرار دارد.</p>
+                </div>`;
+        }
+    }
+
+    function renderUI() {
+        const searchVal = document.getElementById('search-input').value.toLowerCase();
+        const main = document.getElementById('main-content');
+        main.innerHTML = '';
+
+        // Generate Filters
+        const depts = ['همه', ...new Set(allData.map(d => d.dept))];
+        const pillContainer = document.getElementById('filter-pills');
+        pillContainer.innerHTML = depts.map(d => `
+            <button class="filter-btn ${currentFilter === d ? 'active' : ''}" onclick="setFilter('${d}')">${d}</button>
+        `).join('');
+
+        // Filter Logic
+        let filtered = allData.filter(p => {
+            const matchSearch = p.fullName.toLowerCase().includes(searchVal) || p.ext.includes(searchVal) || p.dept.includes(searchVal);
+            const matchDept = currentFilter === 'همه' || p.dept === currentFilter;
+            return matchSearch && matchDept;
+        });
+
+        if (filtered.length === 0) {
+            main.innerHTML = '<div class="empty-state"><i class="fas fa-search fa-3x"></i><p>موردی یافت نشد!</p></div>';
+            return;
+        }
+
+        // Group by Dept
+        const groups = filtered.reduce((acc, obj) => {
+            acc[obj.dept] = acc[obj.dept] || [];
+            acc[obj.dept].push(obj);
+            return acc;
+        }, {});
+
+        // Sort: Managers first, then alphabet
+        Object.keys(groups).forEach(dept => {
+            groups[dept].sort((a, b) => (b.isManager - a.isManager) || a.fullName.localeCompare(b.fullName, 'fa'));
+            
+            const section = document.createElement('div');
+            section.className = 'dept-section';
+            section.innerHTML = `
+                <div class="dept-title"><h2>${dept}</h2><div class="dept-line"></div></div>
+                <div class="grid">
+                    ${groups[dept].map(p => `
+                        <div class="card">
+                            ${p.isManager ? '<span class="badge-manager">مدیر</span>' : ''}
+                            <div class="card-top">
+                                <div class="avatar" style="background:${stringToColor(p.fullName)}">${p.fullName.charAt(0)}</div>
+                                <div class="user-info">
+                                    <h3>${p.fullName}</h3>
+                                    <p>${p.role}</p>
+                                </div>
+                            </div>
+                            <div class="contact-row">
+                                <a href="tel:${p.ext}" class="contact-link">
+                                    <i class="fas fa-phone-alt" style="color:var(--success)"></i>
+                                    <span>${p.ext}</span>
+                                </a>
+                                <i class="far fa-copy copy-trigger" onclick="copyText('${p.ext}')"></i>
+                            </div>
+                            ${p.email !== '-' ? `
+                            <div class="contact-row">
+                                <a href="mailto:${p.email}" class="contact-link">
+                                    <i class="fas fa-envelope" style="color:var(--primary)"></i>
+                                    <span style="font-size:0.8rem">${p.email}</span>
+                                </a>
+                                <i class="far fa-copy copy-trigger" onclick="copyText('${p.email}')"></i>
+                            </div>` : ''}
+                        </div>
+                    `).join('')}
+                </div>
+            `;
+            main.appendChild(section);
+        });
+    }
+
+    function setFilter(d) {
+        currentFilter = d;
+        renderUI();
+    }
+
+    function copyText(txt) {
+        navigator.clipboard.writeText(txt);
+        // Simple toast or feedback could be added here
+        alert('کپی شد: ' + txt);
+    }
+
+    function stringToColor(str) {
+        let hash = 0;
+        for (let i = 0; i < str.length; i++) { hash = str.charCodeAt(i) + ((hash << 5) - hash); }
+        return `hsl(${hash % 360}, 60%, 45%)`;
+    }
+
+    document.getElementById('search-input').addEventListener('input', renderUI);
+    window.onload = init;
+</script>
+</body>
+</html>
